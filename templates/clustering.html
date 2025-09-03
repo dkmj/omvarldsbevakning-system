@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Clustering Interface</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="clustering-container">
+        <header class="dashboard-header">
+            <h1>Clustering Preparation</h1>
+            <div>
+                <span id="user-info"></span>
+                <a href="/dashboard/" class="button-link">Back to Dashboard</a>
+            </div>
+        </header>
+        <p>Drag observations from the "Available" column into your proposal columns.</p>
+
+        <main class="clustering-board">
+            <!-- Approved, un-assigned observations will go here -->
+            <div class="cluster-column" id="available-observations-column">
+                <h2>Available Observations</h2>
+                <div class="observation-list-container"></div>
+            </div>
+
+            <!-- Cluster proposal columns will be dynamically added here -->
+            <div id="proposals-container" class="clusters-wrapper">
+                 <button id="add-proposal-btn" class="add-column-btn">+ New Proposal</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for creating a new cluster proposal (hidden by default) -->
+    <div id="add-proposal-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Create New Proposal</h2>
+            <form id="add-proposal-form">
+                <div class="form-group">
+                    <label for="proposal-name">Proposal Name</label>
+                    <input type="text" id="proposal-name" required>
+                </div>
+                 <div class="form-group">
+                    <label for="proposal-motivation">Motivation</label>
+                    <textarea id="proposal-motivation" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="proposal-color">Color</label>
+                    <input type="color" id="proposal-color" value="#4A90E2">
+                </div>
+                <button type="submit">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/static/clustering.js"></script>
+</body>
+</html>
