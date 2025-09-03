@@ -1,82 +1,38 @@
-# observations/serializers.py
-
 from rest_framework import serializers
-
-from accounts.models import CustomUser
-from clustering.models import Cluster
-from clustering.serializers import ClusterSerializer  # Add this import
-
 from .models import Observation
-
-
-class AuthorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CustomUser
-        fields = ["id", "username", "role"]
-
+from accounts.serializers import UserSerializer # We keep this for author details
 
 class ObservationSerializer(serializers.ModelSerializer):
-    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    """
+    Serializer for creating and listing a user's own observations.
+    """
+    # Make the author field read-only as it's set automatically.
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Observation
         fields = [
-            "id",
-            "created_at",
-            "author",
-            "title",
-            "source_link",
-            "source_file",
-            "interest_reason",
-            "tags",
-            "status",
-            "clusters",
+            'id',
+            'period', # Observations must now be submitted to a period
+            'title',
+            'interest_reason',
+            'implications',
+            'type',
+            'source_link',
+            'source_file',
+            'tags',
+            'author',
+            'created_at',
+            'status',
         ]
+        # The 'period' is writeable, but some fields are read-only
+        read_only_fields = ['author', 'created_at', 'status']
 
     def create(self, validated_data):
-        validated_data["author"] = self.context["request"].user
+        # Set the author from the request context.
+        validated_data['author'] = self.context['request'].user
         return super().create(validated_data)
 
-
-class AdminObservationSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer(read_only=True)
-    # Add this line to show full cluster details, not just IDs
-    clusters = ClusterSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Observation
-        fields = [
-            "id",
-            "created_at",
-            "author",
-            "title",
-            "source_link",
-            "source_file",
-            "interest_reason",
-            "tags",
-            "status",
-            "clusters",  # Add 'clusters' to the fields list
-        ]
-
-
-class AdminObservationDetailSerializer(serializers.ModelSerializer):
-    author = AuthorSerializer(read_only=True)
-    clusters = serializers.PrimaryKeyRelatedField(
-        queryset=Cluster.objects.all(),
-        many=True,
-        required=False,
-    )
-
-    class Meta:
-        model = Observation
-        read_only_fields = [
-            "id",
-            "created_at",
-            "author",
-            "title",
-            "source_link",
-            "source_file",
-            "interest_reason",
-            "tags",
-        ]
-        fields = read_only_fields + ["status", "clusters"]
+# NOTE: The old AdminObservationSerializer and AdminObservationDetailSerializer
+# have been removed from this file. Their functionality will be rebuilt in the
+# other apps (scan_periods and clustering) to match our new, more detailed process.

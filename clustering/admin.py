@@ -1,6 +1,6 @@
 # clustering/admin.py
-from django.contrib import admin
+#from django.contrib import admin
 
-from .models import Cluster
+#from .models import Cluster
 
-admin.site.register(Cluster)
+#admin.site.register(Cluster)

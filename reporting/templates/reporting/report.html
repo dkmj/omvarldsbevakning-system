@@ -26,13 +26,11 @@
             </div>
 
             {% for obs in cluster.observations.all %}
-                {% if obs.status == 'APPROVED' %}
                 <div class="observation">
                     <h3>{{ obs.title }}</h3>
                     <p>{{ obs.interest_reason }}</p>
                     <small>Submitted by: {{ obs.author.username }}</small>
                 </div>
-                {% endif %}
             {% endfor %}
         </div>
         {% endfor %}

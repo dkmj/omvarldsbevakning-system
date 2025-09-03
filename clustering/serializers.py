@@ -1,11 +1,21 @@
-# clustering/serializers.py
-
 from rest_framework import serializers
+from .models import ClusterProposal, FinalCluster, DefiningForce
+from observations.serializers import ObservationSerializer
 
-from .models import Cluster
-
-
-class ClusterSerializer(serializers.ModelSerializer):
+class ClusterProposalSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Cluster
-        fields = ["id", "name", "motivation", "robustness_score", "color"]
+        model = ClusterProposal
+        fields = '__all__'
+
+class FinalClusterSerializer(serializers.ModelSerializer):
+    # We can show full observation details within the final cluster
+    observations = ObservationSerializer(many=True, read_only=True)
+    
+    class Meta:
+        model = FinalCluster
+        fields = '__all__'
+
+class DefiningForceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DefiningForce
+        fields = '__all__'
