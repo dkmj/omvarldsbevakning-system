@@ -1,3 +1,9 @@
+"""URL configuration for the clustering app.
+
+This file uses a DefaultRouter to automatically generate API endpoints
+for the viewsets defined in the views.py file.
+"""
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views

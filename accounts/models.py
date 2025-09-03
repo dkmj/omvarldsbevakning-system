@@ -1,16 +1,24 @@
-# accounts/models.py
+"""Database models for the accounts app."""
 
 from django.contrib.auth.models import AbstractUser, Group, Permission
 from django.db import models
 
 
 class CustomUser(AbstractUser):
+    """Custom user model that extends Django's AbstractUser.
+
+    Adds a 'role' field to the standard user model.
+    """
+
     class Roles(models.TextChoices):
+        """Enumeration for user roles within the system."""
+
         CONTRIBUTOR = "CONTRIBUTOR", "Contributor"
         DB_ADMIN = "DB_ADMIN", "DBAdmin"  # Changed from ADMIN
         SUPER_ADMIN = "SUPER_ADMIN", "SuperAdmin"  # Changed from SUPERADMIN
 
     # The comments were moved outside the function calls here
+    # Overriding groups and user_permissions to avoid clash with default User model
     groups = models.ManyToManyField(
         Group,
         verbose_name="groups",

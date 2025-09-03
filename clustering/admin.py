@@ -1,6 +1,7 @@
-# clustering/admin.py
-# from django.contrib import admin
+"""Admin-konfiguration för appen `clustering`.
 
-# from .models import Cluster
+Denna fil registrerar modeller från `clustering`-appen till Djangos
+admin-gränssnitt.
+"""
 
-# admin.site.register(Cluster)
+from django.contrib import admin  # noqa: F401

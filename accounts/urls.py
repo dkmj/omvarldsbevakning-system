@@ -1,4 +1,4 @@
-# accounts/urls.py
+"""URL-konfiguration för appen `accounts`."""
 
 from django.urls import path
 

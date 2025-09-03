@@ -1,4 +1,4 @@
-# accounts/serializers.py
+"""Serializers för appen `accounts`, hanterar användardata."""
 
 from rest_framework import serializers
 
@@ -6,7 +6,11 @@ from .models import CustomUser
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for displaying user information."""
+    """Serializer för `CustomUser`-modellen.
+
+    Används för läsoperationer för att säkert visa användarinformation,
+    exklusive känslig data som lösenord.
+    """
 
     class Meta:
         model = CustomUser
@@ -14,7 +18,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Serializer for creating (registering) a new user."""
+    """Serializer för att skapa (registrera) en ny användare.
+
+    Hanterar skapandet av användare och säkerställer att lösenordet är
+    write-only och hashas korrekt.
+    """
 
     class Meta:
         model = CustomUser
@@ -22,7 +30,17 @@ class RegisterSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
     def create(self, validated_data):
-        # We override create to handle password hashing.
+        """Skapar och returnerar en ny `CustomUser`-instans.
+
+        Denna metod använder Djangos `create_user`-hjälpfunktion för att
+        säkerställa att lösenordet hashas korrekt.
+
+        Args:
+            validated_data (dict): Validerad data från serializern.
+
+        Returns:
+            CustomUser: Den nyskapade användarinstansen.
+        """
         user = CustomUser.objects.create_user(
             validated_data["username"],
             email=validated_data["email"],
