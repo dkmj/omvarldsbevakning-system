@@ -1,0 +1,39 @@
+body {
+    font-family: sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+.container {
+    background-color: white;
+    padding: 2em;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+.form-group {
+    margin-bottom: 1em;
+}
+label {
+    display: block;
+    margin-bottom: 0.5em;
+}
+input {
+    width: 100%;
+    padding: 0.5em;
+    box-sizing: border-box;
+}
+button {
+    width: 100%;
+    padding: 0.7em;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    cursor: pointer;
+}
+.error {
+    color: red;
+    margin-top: 1em;
+}

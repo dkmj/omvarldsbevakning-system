@@ -1,0 +1,10 @@
+# .ruff.toml
+
+# Scan only the files in the current project directory.
+force-exclude = false
+# Do not respect global gitignore or other exclude rules.
+respect-gitignore = false
+# List of directories to explicitly exclude.
+extend-exclude = [
+    "/Users/peternou/.cookiecutters/",
+]

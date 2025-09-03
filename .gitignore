@@ -1,0 +1,17 @@
+# Django
+*.log
+*.pot
+*.pyc
+pycache/
+local_settings.py
+db.sqlite3
+media/
+
+# Virtual Environment
+.venv/
+
+# Ruff cache
+.ruff_cache/
+
+# System files
+.DS_Store

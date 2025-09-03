@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Observation Report</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.5; }
+        .report { max-width: 800px; margin: 2em auto; padding: 2em; border: 1px solid #ccc; }
+        .cluster { border: 1px solid #eee; padding: 1em; margin-bottom: 2em; }
+        .cluster-header { border-bottom: 2px solid; padding-bottom: 0.5em; margin-bottom: 1em; }
+        .observation { margin-left: 2em; padding-bottom: 1em; }
+        h1, h2, h3 { margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="report">
+        <h1>Observation Report</h1>
+        <hr>
+
+        {% for cluster in clusters %}
+        <div class="cluster" style="border-color: {{ cluster.color }};">
+            <div class="cluster-header" style="border-bottom-color: {{ cluster.color }};">
+                <h2>{{ cluster.name }}</h2>
+                <p><strong>Robustness:</strong> {{ cluster.robustness_score }}%</p>
+                <p><em>{{ cluster.motivation }}</em></p>
+            </div>
+
+            {% for obs in cluster.observations.all %}
+                {% if obs.status == 'APPROVED' %}
+                <div class="observation">
+                    <h3>{{ obs.title }}</h3>
+                    <p>{{ obs.interest_reason }}</p>
+                    <small>Submitted by: {{ obs.author.username }}</small>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        {% if unclustered_observations %}
+        <div class="cluster">
+            <h2>Unclustered Observations</h2>
+            {% for obs in unclustered_observations %}
+            <div class="observation">
+                <h3>{{ obs.title }}</h3>
+                <p>{{ obs.interest_reason }}</p>
+                <small>Submitted by: {{ obs.author.username }}</small>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
