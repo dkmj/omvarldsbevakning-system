@@ -2,14 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Dashboard - Omvärldsbevakning</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Dashboard</h1>
-        <p>Welcome! You are logged in.</p>
-        <button id="logout-button">Logout</button>
+        <header class="dashboard-header">
+            <h1>Dashboard</h1>
+            <div>
+                <span id="user-info"></span>
+                <button id="logout-button">Logout</button>
+            </div>
+        </header>
+
+        <!-- This section will be shown to Contributors -->
+        <main id="contributor-view" class="hidden">
+            <h2>Submit a New Observation</h2>
+            <form id="observation-form">
+                <div class="form-group">
+                    <label for="title">Title</label>
+                    <input type="text" id="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="interest_reason">Why is this interesting?</label>
+                    <textarea id="interest_reason" rows="4" required></textarea>
+                </div>
+                 <div class="form-group">
+                    <label for="source_link">Source Link (Optional)</label>
+                    <input type="url" id="source_link">
+                </div>
+                <!-- New File Input Field -->
+                <div class="form-group">
+                    <label for="source_file">Source File (Optional)</label>
+                    <input type="file" id="source_file">
+                </div>
+                <div class="form-group">
+                    <label for="tags">Tags (comma-separated)</label>
+                    <input type="text" id="tags">
+                </div>
+                <button type="submit">Submit Observation</button>
+            </form>
+            <hr>
+            <h2>Your Submissions</h2>
+            <div id="observation-list">
+                <!-- Observations will be loaded here by JavaScript -->
+            </div>
+        </main>
+
+        <!-- This section will be shown to Admins -->
+        <main id="admin-view" class="hidden">
+            <h2>Admin Tools</h2>
+            <p>As an administrator, you can manage the system's data.</p>
+            <a href="/admin/" class="button-link">Go to Django Admin</a>
+            <a href="/report/" class="button-link">View Full Report</a>
+        </main>
+        
     </div>
     <script src="/static/dashboard.js"></script>
 </body>
