@@ -1,23 +1,25 @@
-"""Admin-konfiguration för appen `accounts`."""
-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-
 from .models import CustomUser
 
 
 class CustomUserAdmin(UserAdmin):
-    """Admin configuration for the CustomUser model.
-
-    Inherits from Django's UserAdmin and customizes the list display.
-
-    Attributes:
-        model (CustomUser): The model this admin class is for.
-        list_display (list): Fields to display in the admin list view.
+    """
+    Custom configuration for the User model in the Django admin.
     """
 
-    model = CustomUser
-    # Add the 'role' field to the list display in the admin
+    # This copies the default fields from the standard UserAdmin...
+    fieldsets = UserAdmin.fieldsets + (
+        # ...and adds our custom 'Role' section.
+        (
+            "Application Role",
+            {
+                "fields": ("role",),
+            },
+        ),
+    )
+
+    # This controls the columns displayed in the user list view.
     list_display = ["username", "email", "role", "is_staff"]
 
 

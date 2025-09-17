@@ -12,6 +12,7 @@ urlpatterns = [
     path("api/auth/", include("dj_rest_auth.urls")),  # Revert to the standard include
     path("api/observations/", include("observations.urls")),
     path("api/", include("clustering.urls")),
+    path("api/", include("scan_periods.urls")),
     # Frontend Pages
     path("", include("core.urls")),
     path("report/", include("reporting.urls")),

@@ -1,13 +1,9 @@
 """
 A Django management command to populate the database with sample data.
 
-This command is designed for development purposes. It clears out existing
-data (except for superusers) and creates a fresh set of users, periods,
-observations, and clusters to provide a realistic testing environment for the
-frontend and API.
-
-To run this command:
-    uv run python manage.py populate_observations
+This command clears out existing data (except for superusers) and creates a
+fresh set of users, a period, observations, proposals, and final clusters
+to provide a realistic testing environment.
 """
 
 import random
@@ -28,16 +24,7 @@ class Command(BaseCommand):
     help = "Populates the database with a rich set of sample data reflecting the new process."
 
     def handle(self, *args, **kwargs):
-        """
-        The main logic for the management command.
-
-        This method executes the following steps in order:
-        1. Deletes all existing data (respecting foreign key constraints).
-        2. Creates a new set of sample users with different roles.
-        3. Creates a single, active 'Period' for the current month.
-        4. Assigns some users as Participants and DBAdmins for that Period.
-        5. Creates a batch of sample Observations within the Period.
-        """
+        """The main logic for the management command."""
         self.stdout.write("Deleting old data...")
         # Delete in an order that respects foreign key constraints to avoid errors.
         ClusterProposal.objects.all().delete()
@@ -50,7 +37,6 @@ class Command(BaseCommand):
         self.stdout.write("Creating new sample data...")
 
         # --- Section 1: Create Users ---
-        # Create a set of users with different roles for testing.
         user1 = CustomUser.objects.create_user(
             username="contrib1", password="password123", role="CONTRIBUTOR"
         )
@@ -68,35 +54,66 @@ class Command(BaseCommand):
         )
 
         # --- Section 2: Create a Period ---
-        # Create a single period for all the test data to belong to.
         today = timezone.now().date()
         period = Period.objects.create(
-            name=f"Scan Period - {today.strftime('%B %Y')}",
+            name=f"Analysis Period - {today.strftime('%B %Y')}",
             start_date=today - timedelta(days=30),
             end_date=today,
-            status="CLUSTERING",  # Set to a state useful for testing the clustering UI.
+            status="MEETING",  # Set to a state useful for testing all UIs
         )
 
         # --- Section 3: Assign Roles for the Period ---
-        # Designate which users will act as Participants and DBAdmins for this specific period.
-        participants = [participant1, dbadmin1]
-        period.participants.set(participants)
+        period.participants.set([participant1, dbadmin1])
         period.db_admins.set([dbadmin1])
 
         # --- Section 4: Create Observations for the Period ---
-        # Create a batch of observations authored by various contributors.
+        observations = []
         for i in range(20):
-            author = random.choice([user1, user2, participant1])
-            Observation.objects.create(
+            obs = Observation.objects.create(
                 period=period,
-                author=author,
+                author=random.choice([user1, user2, participant1]),
                 title=f"Sample Observation {i + 1}",
                 implications=f"This could impact the future of topic {i % 4 + 1}.",
                 type=random.choice([t[0] for t in Observation.ObservationType.choices]),
-                interest_reason=f"This is the interesting reason for observation number {i + 1}.",
-                tags=random.choice(["AI", "Security", "Tech", "Future", "Innovation"]),
-                status="APPROVED",  # Make all approved for easy testing.
+                interest_reason=f"Reason for observation {i + 1}.",
+                tags=random.choice(["AI", "Security", "Tech", "Future"]),
+                status="APPROVED",
             )
+            observations.append(obs)
+
+        # --- Section 5: Create Cluster Proposals ---
+        proposal1 = ClusterProposal.objects.create(
+            period=period,
+            proposer=participant1,
+            name="Participant 1's AI Proposal",
+            color="#4A90E2",
+        )
+        proposal1.observations.set(random.sample(observations, k=5))
+
+        proposal2 = ClusterProposal.objects.create(
+            period=period,
+            proposer=dbadmin1,
+            name="Admin's Security Proposal",
+            color="#C70039",
+        )
+        proposal2.observations.set(random.sample(observations, k=5))
+
+        # --- Section 6: Create Final Clusters and Defining Forces ---
+        force1 = DefiningForce.objects.create(
+            period=period,
+            name="The Rise of Automation",
+            description="Automation is impacting all sectors.",
+        )
+
+        final_cluster = FinalCluster.objects.create(
+            period=period,
+            name="Consolidated AI Trends",
+            motivation="Outcome of the meeting.",
+            robustness_score=85,
+            color="#C70039",
+        )
+        final_cluster.observations.set(random.sample(observations, k=6))
+        final_cluster.defining_forces.set([force1])
 
         self.stdout.write(
             self.style.SUCCESS(

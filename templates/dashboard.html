@@ -15,6 +15,14 @@
             </div>
         </header>
 
+        <!-- This section is for Participants -->
+        <main id="participant-view" class="hidden">
+            <h2>Participant Tools</h2>
+            <p>You are a designated participant for an active clustering period.</p>
+            <a href="/clustering/" class="button-link">Go to Clustering Interface</a>
+            <hr>
+        </main>
+
         <!-- This section will be shown to Contributors -->
         <main id="contributor-view" class="hidden">
             <h2>Submit a New Observation</h2>
@@ -31,7 +39,6 @@
                     <label for="source_link">Source Link (Optional)</label>
                     <input type="url" id="source_link">
                 </div>
-                <!-- New File Input Field -->
                 <div class="form-group">
                     <label for="source_file">Source File (Optional)</label>
                     <input type="file" id="source_file">
@@ -53,12 +60,12 @@
         <main id="admin-view" class="hidden">
             <h2>Admin Tools</h2>
             <p>As an administrator, you can manage the system's data.</p>
-            <a href="/clustering/" class="button-link">Go to Clustering Interface</a> 
             <a href="/admin/" class="button-link">Go to Django Admin</a>
             <a href="/report/" class="button-link">View Full Report</a>
         </main>
-        
+
     </div>
     <script src="/static/dashboard.js"></script>
 </body>
 </html>
+

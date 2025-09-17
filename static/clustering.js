@@ -1,42 +1,63 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('authToken');
+document.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("authToken");
     if (!token) {
-        window.location.href = '/';
+        window.location.href = "/";
         return;
     }
 
-    const userInfoSpan = document.getElementById('user-info');
-    const proposalsContainer = document.getElementById('proposals-container');
-    const availableObservationsColumn = document.querySelector('#available-observations-column .observation-list-container');
-    
+    // --- DOM Element References ---
+    const userInfoSpan = document.getElementById("user-info");
+    const pageTitle = document.getElementById("page-title");
+    const proposalsContainer = document.getElementById("proposals-container");
+    const availableObservationsColumn = document.querySelector("#available-observations-column .observation-list-container");
+    const modal = document.getElementById("add-proposal-modal");
+    const addProposalBtn = document.getElementById("add-proposal-btn");
+    const closeBtn = document.querySelector(".close-button");
+    const addProposalForm = document.getElementById("add-proposal-form");
+
+    // --- Global State ---
     let allObservations = [];
     let myProposals = [];
     let currentUser = null;
-    let currentPeriod = null; // We'll need to know the current period
+    let activePeriod = null;
 
     // --- 1. DATA FETCHING ---
-    // First, get the current user's info
-    fetch('/api/accounts/me/', { headers: { 'Authorization': `Token ${token}` } })
-        .then(res => res.json())
-        .then(user => {
-            currentUser = user;
-            userInfoSpan.textContent = `Welcome, ${user.username}`;
-            // For now, we assume we are working in the first period.
-            // A real implementation would have a way to select the active period.
-            currentPeriod = 1; 
-            return Promise.all([
-                fetch(`/api/observations/admin/?period=${currentPeriod}`, { headers: { 'Authorization': `Token ${token}` } }).then(res => res.json()),
-                fetch(`/api/proposals/?period=${currentPeriod}`, { headers: { 'Authorization': `Token ${token}` } }).then(res => res.json())
+    async function initializeBoard() {
+        try {
+            // Step 1: Get the current user
+            const userRes = await fetch("/api/accounts/me/", { headers: { Authorization: `Token ${token}` } });
+            if (!userRes.ok) throw new Error("Could not fetch user.");
+            currentUser = await userRes.json();
+            userInfoSpan.textContent = `Welcome, ${currentUser.username}`;
+
+            // Step 2: Find the active period for clustering
+            const periodsRes = await fetch("/api/periods/?status=CLUSTERING", { headers: { Authorization: `Token ${token}` } });
+            if (!periodsRes.ok) throw new Error("Could not fetch periods.");
+            const activePeriods = await periodsRes.json();
+            
+            if (activePeriods.length === 0) {
+                document.querySelector('.clustering-board').innerHTML = "<h2>No period is currently open for clustering.</h2>";
+                return;
+            }
+            activePeriod = activePeriods[0];
+            pageTitle.textContent = `Clustering Preparation for ${activePeriod.name}`;
+
+            // Step 3: Fetch all data needed for the board, using the active period ID
+            const [obsData, proposalData] = await Promise.all([
+                fetch(`/api/observations/participant/?period_id=${activePeriod.id}`, { headers: { Authorization: `Token ${token}` } }).then(res => res.json()),
+                fetch(`/api/proposals/?period_id=${activePeriod.id}`, { headers: { Authorization: `Token ${token}` } }).then(res => res.json())
             ]);
-        })
-        .then(([obsData, proposalData]) => {
-            // Filter for approved observations
-            allObservations = obsData.filter(obs => obs.status === 'APPROVED');
-            // We only want proposals created by the current user for the current period
-            myProposals = proposalData.filter(p => p.proposer.id === currentUser.id);
+            
+            allObservations = obsData.results || obsData;
+            myProposals = proposalData.results || proposalData;
+            
             renderBoard();
-        })
-        .catch(error => console.error("Error fetching initial data:", error));
+
+        } catch (error) {
+            console.error("Error initializing board:", error);
+            document.querySelector('.clustering-board').innerHTML = `<h2>Error loading data. Please try again later.</h2><p>${error.message}</p>`;
+        }
+    }
 
     // --- 2. RENDERING LOGIC ---
     function renderBoard() {
@@ -48,15 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
             proposalsContainer.prepend(proposalCol);
         });
         
-        const assignedObsIds = new Set();
-        myProposals.forEach(proposal => {
-            proposal.observations.forEach(obsId => assignedObsIds.add(obsId));
-        });
+        const assignedObsIds = new Set(myProposals.flatMap(p => p.observations));
 
         allObservations.forEach(obs => {
             if (!assignedObsIds.has(obs.id)) {
-                const obsCard = createObservationCard(obs);
-                availableObservationsColumn.appendChild(obsCard);
+                availableObservationsColumn.appendChild(createObservationCard(obs));
             }
         });
         
@@ -111,76 +128,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         containers.forEach(container => {
-            container.addEventListener('dragover', e => {
-                e.preventDefault();
-            });
-
+            container.addEventListener('dragover', e => e.preventDefault());
             container.addEventListener('drop', e => {
                 e.preventDefault();
                 const observationId = e.dataTransfer.getData('text/plain');
                 const proposalId = container.parentElement.dataset.proposalId;
-                const card = document.querySelector(`.observation-card[data-observation-id='${observationId}']`);
+                const card = document.querySelector(`[data-observation-id='${observationId}']`);
                 container.appendChild(card);
-                updateProposalObservations(observationId, proposalId, container.parentElement.id === 'available-observations-column');
+                updateProposalObservations(observationId, proposalId);
             });
         });
     }
 
-    async function updateProposalObservations(observationId, proposalId, movedToAvailable) {
-        let proposalToUpdate = myProposals.find(p => p.id == proposalId);
+    async function updateProposalObservations(observationId, proposalId) {
+        if (!proposalId) return; // Dropped in the 'available' column, no API call needed yet
+        const proposal = myProposals.find(p => p.id == proposalId);
+        let updatedObsIds = [...proposal.observations, parseInt(observationId)];
         
-        // Find all proposals this observation is in
-        myProposals.forEach(p => {
-            const index = p.observations.indexOf(parseInt(observationId));
-            if (index > -1) {
-                p.observations.splice(index, 1);
-            }
-        });
-
-        // Add to the new proposal if it's not the "available" column
-        if (!movedToAvailable && proposalToUpdate) {
-            proposalToUpdate.observations.push(parseInt(observationId));
-        }
-        
-        // We need to send PATCH requests to all affected proposals
-        const updatePromises = myProposals.map(p => {
-            return fetch(`/api/proposals/${p.id}/`, {
+        try {
+            await fetch(`/api/proposals/${proposalId}/`, {
                 method: 'PATCH',
                 headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ observations: p.observations }),
+                body: JSON.stringify({ observations: updatedObsIds }),
             });
-        });
-
-        try {
-            await Promise.all(updatePromises);
+            initializeBoard(); // Refresh the whole board on success
         } catch (error) {
-            console.error("Failed to update one or more proposals", error);
-            alert("An error occurred. The board will be refreshed to the last saved state.");
-            // Refetch all data to revert UI on error
-            Promise.all([
-                fetch(`/api/observations/admin/?period=${currentPeriod}`, { headers: { 'Authorization': `Token ${token}` } }).then(res => res.json()),
-                fetch(`/api/proposals/?period=${currentPeriod}`, { headers: { 'Authorization': `Token ${token}` } }).then(res => res.json())
-            ]).then(([obsData, proposalData]) => {
-                allObservations = obsData.filter(obs => obs.status === 'APPROVED' && obs.final_clusters.length === 0);
-                myProposals = proposalData.filter(p => p.proposer.id === currentUser.id);
-                renderBoard();
-            });
+            console.error(error);
+            alert("Failed to move observation. Reverting.");
+            renderBoard();
         }
     }
     
     // --- 4. MODAL LOGIC ---
-    const modal = document.getElementById('add-proposal-modal');
-    const addProposalBtn = document.getElementById('add-proposal-btn');
-    const closeBtn = document.querySelector('.close-button');
-    const addProposalForm = document.getElementById('add-proposal-form');
-
-    if(addProposalBtn) addProposalBtn.onclick = () => modal.classList.remove('hidden');
-    if(closeBtn) closeBtn.onclick = () => modal.classList.add('hidden');
+    addProposalBtn.onclick = () => modal.classList.remove('hidden');
+    closeBtn.onclick = () => modal.classList.add('hidden');
     window.onclick = (event) => {
         if (event.target == modal) modal.classList.add('hidden');
     };
     
-    if(addProposalForm) addProposalForm.addEventListener('submit', async (e) => {
+    addProposalForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('proposal-name').value;
         const motivation = document.getElementById('proposal-motivation').value;
@@ -190,12 +176,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/api/proposals/', {
                 method: 'POST',
                 headers: { 'Authorization': `Token ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, motivation, color, period: currentPeriod })
+                body: JSON.stringify({ name, motivation, color, period: activePeriod.id })
             });
             if (!response.ok) throw new Error('Failed to create proposal');
-            const newProposal = await response.json();
-            myProposals.push(newProposal);
-            renderBoard();
+            initializeBoard(); // Refresh board to show new proposal
             modal.classList.add('hidden');
             addProposalForm.reset();
         } catch(error) {
@@ -203,5 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Failed to create proposal.');
         }
     });
+
+    // --- Initial Load ---
+    initializeBoard();
 });
 

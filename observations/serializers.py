@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from .models import Observation
-from accounts.serializers import UserSerializer  # We keep this for author details
+from accounts.serializers import UserSerializer
 
 
 class ObservationSerializer(serializers.ModelSerializer):
@@ -8,14 +8,14 @@ class ObservationSerializer(serializers.ModelSerializer):
     Serializer for creating and listing a user's own observations.
     """
 
-    # Make the author field read-only as it's set automatically.
+    # Show author details on read, but it's set automatically on write.
     author = UserSerializer(read_only=True)
 
     class Meta:
         model = Observation
         fields = [
             "id",
-            "period",  # Observations must now be submitted to a period
+            "period",  # Users must specify which period they are submitting to.
             "title",
             "interest_reason",
             "implications",
@@ -27,15 +27,10 @@ class ObservationSerializer(serializers.ModelSerializer):
             "created_at",
             "status",
         ]
-        # The 'period' is writeable, but some fields are read-only
+        # These fields are set by the system, not the user.
         read_only_fields = ["author", "created_at", "status"]
 
     def create(self, validated_data):
-        # Set the author from the request context.
+        # Automatically set the author to the currently logged-in user.
         validated_data["author"] = self.context["request"].user
         return super().create(validated_data)
-
-
-# NOTE: The old AdminObservationSerializer and AdminObservationDetailSerializer
-# have been removed from this file. Their functionality will be rebuilt in the
-# other apps (scan_periods and clustering) to match our new, more detailed process.

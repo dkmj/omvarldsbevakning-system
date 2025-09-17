@@ -1,36 +1,49 @@
-"""Serializers for the clustering app."""
-
 from rest_framework import serializers
 from .models import ClusterProposal, FinalCluster, DefiningForce
-from observations.serializers import ObservationSerializer
-
-
-class ClusterProposalSerializer(serializers.ModelSerializer):
-    """Serializer for the ClusterProposal model."""
-
-    class Meta:
-        model = ClusterProposal
-        fields = "__all__"
-
-
-class FinalClusterSerializer(serializers.ModelSerializer):
-    """Serializer for the FinalCluster model.
-
-    Includes nested serialization for related observations to provide
-    detailed information in the API response.
-    """
-
-    # We can show full observation details within the final cluster
-    observations = ObservationSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = FinalCluster
-        fields = "__all__"
+from accounts.serializers import UserSerializer
 
 
 class DefiningForceSerializer(serializers.ModelSerializer):
-    """Serializer for the DefiningForce model."""
-
     class Meta:
         model = DefiningForce
-        fields = "__all__"
+        fields = ["id", "period", "name", "description"]
+
+
+class FinalClusterSerializer(serializers.ModelSerializer):
+    # To show full details instead of just IDs
+    defining_forces = DefiningForceSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FinalCluster
+        fields = [
+            "id",
+            "period",
+            "name",
+            "motivation",
+            "robustness_score",
+            "color",
+            "observations",
+            "defining_forces",
+        ]
+
+
+class ClusterProposalSerializer(serializers.ModelSerializer):
+    # Show the proposer's details, but make it read-only
+    proposer = UserSerializer(read_only=True)
+
+    class Meta:
+        model = ClusterProposal
+        fields = [
+            "id",
+            "period",
+            "proposer",
+            "name",
+            "motivation",
+            "color",
+            "observations",
+        ]
+
+    def create(self, validated_data):
+        # Automatically set the proposer to the current user
+        validated_data["proposer"] = self.context["request"].user
+        return super().create(validated_data)

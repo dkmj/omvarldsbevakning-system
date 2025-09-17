@@ -8,19 +8,21 @@
 <body>
     <div class="clustering-container">
         <header class="dashboard-header">
-            <h1>Clustering Preparation</h1>
+            <h1 id="page-title">Clustering Preparation for [Period Name]</h1>
             <div>
                 <span id="user-info"></span>
                 <a href="/dashboard/" class="button-link">Back to Dashboard</a>
             </div>
         </header>
-        <p>Drag observations from the "Available" column into your proposal columns.</p>
+        <p>Drag observations from the "Available" column into your proposal columns below.</p>
 
         <main class="clustering-board">
             <!-- Approved, un-assigned observations will go here -->
             <div class="cluster-column" id="available-observations-column">
                 <h2>Available Observations</h2>
-                <div class="observation-list-container"></div>
+                <div class="observation-list-container">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
             </div>
 
             <!-- Cluster proposal columns will be dynamically added here -->
@@ -52,7 +54,8 @@
             </form>
         </div>
     </div>
-
+    
     <script src="/static/clustering.js"></script>
 </body>
 </html>
+

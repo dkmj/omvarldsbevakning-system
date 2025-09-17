@@ -1,7 +1,14 @@
 from django.urls import path
-from .views import ObservationListCreateView
+from .views import ObservationListCreateView, ParticipantObservationListView
 
 urlpatterns = [
-    # This is now the only URL pattern in this file.
+    # URL for contributors to submit and see their own observations
     path("", ObservationListCreateView.as_view(), name="observation-list-create"),
+    # New URL for participants to see all observations for a period,
+    # e.g., /api/observations/participant/?period_id=1
+    path(
+        "participant/",
+        ParticipantObservationListView.as_view(),
+        name="observation-participant-list",
+    ),
 ]
